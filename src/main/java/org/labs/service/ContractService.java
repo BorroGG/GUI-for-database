@@ -27,9 +27,7 @@ public class ContractService {
     }
 
     public List<Contract> selectAllContracts() {
-        List<Contract> list = contractMapper.selectAllContracts();
-        list.forEach(e -> System.out.println(e.toString()));
-        return list;
+        return contractMapper.selectAllContracts();
     }
 
     public Contract selectContractByNumber(Contract selectDTO) {
