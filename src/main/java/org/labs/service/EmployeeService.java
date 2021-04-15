@@ -35,6 +35,10 @@ public class EmployeeService {
         return employeeMapper.selectEmployeeByLogin(employee);
     }
 
+    public Employee selectEmployeeByServiceNumber(Integer selectDTO) {
+        return employeeMapper.selectEmployeeByServiceNumber(selectDTO);
+    }
+
     public void delete(Employee deleteDTO) {
         Employee employee = mapper.map(deleteDTO, Employee.class);
         employeeMapper.delete(employee);

@@ -1,5 +1,6 @@
 package org.labs.service;
 
+import org.labs.mapper.EquipmentMapper;
 import org.labs.model.Equipment;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,29 +14,29 @@ public class EquipmentService {
     private final ModelMapper mapper = new ModelMapper();
 
     @Autowired
-    private EquipmentService equipmentService;
+    private EquipmentMapper equipmentMapper;
 
     public void save(Equipment saveDTO) {
         Equipment equipment = mapper.map(saveDTO, Equipment.class);
-        equipmentService.save(equipment);
+        equipmentMapper.save(equipment);
     }
 
     public void update(Equipment updateDTO) {
         Equipment equipment = mapper.map(updateDTO, Equipment.class);
-        equipmentService.update(equipment);
+        equipmentMapper.update(equipment);
     }
 
     public List<Equipment> selectAllEquipments() {
-        return equipmentService.selectAllEquipments();
+        return equipmentMapper.selectAllEquipments();
     }
 
-    public Equipment selectEquipmentById(Equipment selectDTO) {
+    public Equipment selectEquipmentByNumber(Equipment selectDTO) {
         Equipment equipment = mapper.map(selectDTO, Equipment.class);
-        return equipmentService.selectEquipmentById(equipment);
+        return equipmentMapper.selectEquipmentByNumber(equipment);
     }
 
     public void delete(Equipment deleteDTO) {
         Equipment equipment = mapper.map(deleteDTO, Equipment.class);
-        equipmentService.delete(equipment);
+        equipmentMapper.delete(equipment);
     }
 }

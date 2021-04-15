@@ -5,5 +5,5 @@ import lombok.Data;
 @Data
 public class Position {
     private Integer positionId;
-    private String tittle;
+    private String title;
 }

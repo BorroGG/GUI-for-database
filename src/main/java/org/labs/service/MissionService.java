@@ -1,7 +1,6 @@
 package org.labs.service;
 
 import org.labs.mapper.MissionMapper;
-import org.labs.model.Employee;
 import org.labs.model.Mission;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,7 +32,12 @@ public class MissionService {
 
     public Mission selectMissionByNumber(Mission selectDTO) {
         Mission mission = mapper.map(selectDTO, Mission.class);
-        return missionMapper.selectMissionByNumber(mission);
+        return missionMapper.selectMissionById(mission);
+    }
+
+    public List<Mission> selectMissionByExecutor(Integer executor) {
+        //Mission mission = mapper.map(selectDTO, Mission.class);
+        return missionMapper.selectMissionByExecutor(executor);
     }
 
     public void delete(Mission deleteDTO) {

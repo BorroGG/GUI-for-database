@@ -23,6 +23,9 @@ public interface EmployeeMapper {
     @Select("select * from employee where login = #{login}")
     Employee selectEmployeeByLogin(Employee employee);
 
+    @Select("select * from employee where servicenumber = #{serviceNumber}")
+    Employee selectEmployeeByServiceNumber(Integer serviceNumber);
+
     @Delete("delete from employee where servicenumber = #{serviceNumber}")
     void delete(Employee employee);
 
