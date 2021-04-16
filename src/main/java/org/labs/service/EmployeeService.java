@@ -30,9 +30,8 @@ public class EmployeeService {
         return employeeMapper.selectAllEmployees();
     }
 
-    public Employee selectEmployeeByLogin(Employee selectDTO) {
-        Employee employee = mapper.map(selectDTO, Employee.class);
-        return employeeMapper.selectEmployeeByLogin(employee);
+    public Employee selectEmployeeByLogin(String login) {
+        return employeeMapper.selectEmployeeByLogin(login);
     }
 
     public Employee selectEmployeeByServiceNumber(Integer selectDTO) {

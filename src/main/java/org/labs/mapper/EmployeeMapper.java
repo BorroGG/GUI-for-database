@@ -21,7 +21,7 @@ public interface EmployeeMapper {
     List<Employee> selectAllEmployees();
 
     @Select("select * from employee where login = #{login}")
-    Employee selectEmployeeByLogin(Employee employee);
+    Employee selectEmployeeByLogin(String login);
 
     @Select("select * from employee where servicenumber = #{serviceNumber}")
     Employee selectEmployeeByServiceNumber(Integer serviceNumber);

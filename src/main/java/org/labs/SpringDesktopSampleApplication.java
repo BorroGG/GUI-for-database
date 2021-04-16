@@ -1,12 +1,9 @@
 package org.labs;
 
-import org.labs.app.MainFrame;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
-
-import java.util.Properties;
 
 @SpringBootApplication
 @MapperScan("org.labs.mapper")
@@ -18,6 +15,6 @@ public class SpringDesktopSampleApplication implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        //new MainFrame();
+
     }
 }
