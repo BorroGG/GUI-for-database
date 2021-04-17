@@ -463,7 +463,7 @@ public class MainFrame extends JFrame {
 
         mainPanel.repaint();
     }
-    //TODO: Продолжить рефакторинг отсюда.
+
     private void showCreateMissionFrame() {
         mainPanel.removeAll();
 
@@ -478,7 +478,7 @@ public class MainFrame extends JFrame {
         mainPanel.add(createLabel("Приоритет:", 30, 315, 200, 30, COMMON_FONT));
         mainPanel.add(createLabel("Заказчик:", 30, 365, 200, 30, COMMON_FONT));
 
-        List<Object> listTextFields = new LinkedList<>();
+        List<Object> panelFields = new LinkedList<>();
 
         DefaultComboBoxModel<String> cbModelForPriority = new DefaultComboBoxModel<>(new String[]{null, "Высокий", "Средний", "Низкий"});
         JComboBox<String> comboBoxForPriority = new JComboBox<>(cbModelForPriority);
@@ -498,12 +498,12 @@ public class MainFrame extends JFrame {
         serviceNumEmployeeArr[0] = null;
         for (int i = 0; i < employeeList.size(); i++) {
             Employee employee = employeeList.get(i);
-            String s = employee.getServiceNumber() + ", " + employee.getFirstName()
+            String aboutEmployee = employee.getServiceNumber() + ", " + employee.getFirstName()
                     + ", " + employee.getLastName() + ", " + employee.getMiddleName()
                     + ", " + employee.getPhone() + ", " + employee.getEmail()
                     + ", " + employee.getFax() + ", " + employee.getLogin()
                     + ", " + employee.getPositionId();
-            employeeArr[i + 1] = s;
+            employeeArr[i + 1] = aboutEmployee;
             serviceNumEmployeeArr[i + 1] = employee.getServiceNumber();
         }
         DefaultComboBoxModel<String> cbModelForEmployee = new DefaultComboBoxModel<>(employeeArr);
@@ -529,27 +529,27 @@ public class MainFrame extends JFrame {
         for (int i = 0; i < 7; i++) {
             if (i == 5) {
                 comboBoxForPriority.setBounds(30, 90 + (i * 50), 200, 30);
-                listTextFields.add(comboBoxForPriority);
+                panelFields.add(comboBoxForPriority);
                 mainPanel.add(comboBoxForPriority);
             } else if (i == 4) {
                 comboBoxForEmployee.setBounds(30, 90 + (i * 50), 500, 30);
                 if (currentUser.getPositionId() == 2) {
                     comboBoxForEmployee.setVisible(false);
                 }
-                listTextFields.add(comboBoxForEmployee);
+                panelFields.add(comboBoxForEmployee);
                 mainPanel.add(comboBoxForEmployee);
             } else if (i == 6) {
                 comboBoxForCustomer.setBounds(30, 90 + (i * 50), 500, 30);
-                listTextFields.add(comboBoxForCustomer);
+                panelFields.add(comboBoxForCustomer);
                 mainPanel.add(comboBoxForCustomer);
             } else {
-                listTextFields.add(createTextField(90 + (i * 50), 200));
-                mainPanel.add((JTextField) listTextFields.get(i));
+                panelFields.add(createTextField(90 + (i * 50), 200));
+                mainPanel.add((JTextField) panelFields.get(i));
             }
         }
 
         JButton submitButt = getStandardSubmitButton("Создать");
-        submitButt.addActionListener(e -> createNewMission(listTextFields, serviceNumEmployeeArr, serviceNumCustomerArr));
+        submitButt.addActionListener(e -> createNewMission(panelFields, serviceNumEmployeeArr, serviceNumCustomerArr));
         mainPanel.add(submitButt);
 
         JButton backButt = getStandardBackButton();
@@ -558,45 +558,44 @@ public class MainFrame extends JFrame {
         mainPanel.repaint();
     }
 
-    private void createNewMission(List<Object> jTextFieldList, Integer[] employeeArr, Integer[] customerArr) {
-        boolean success = true;
+    private void createNewMission(List<Object> panelFields, Integer[] employeeArr, Integer[] customerArr) {
         Mission mission = new Mission();
-        mission.setName(((JTextField) jTextFieldList.get(0)).getText());
-        mission.setDescription(((JTextField) jTextFieldList.get(1)).getText());
-        SimpleDateFormat myFormat = new SimpleDateFormat("yyyy-MM-dd");
+        mission.setName(((JTextField) panelFields.get(0)).getText());
+        mission.setDescription(((JTextField) panelFields.get(1)).getText());
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         Date beginDate;
         Date endDate = null;
         try {
-            beginDate = myFormat.parse(((JTextField) jTextFieldList.get(2)).getText());
+            beginDate = dateFormat.parse(((JTextField) panelFields.get(2)).getText());
         } catch (ParseException e) {
-            System.out.println("lol1");
             JOptionPane.showMessageDialog(this, "Неверная дата начала!");
-            createMainMenu();
             return;
         }
         try {
-            endDate = myFormat.parse(((JTextField) jTextFieldList.get(3)).getText());
+            endDate = dateFormat.parse(((JTextField) panelFields.get(3)).getText());
         } catch (ParseException e) {
-            System.out.println("lol2");
+            if (!((JTextField) panelFields.get(3)).getText().isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Неверная дата конца!");
+                return;
+            }
         }
         try {
             mission.setBeginDate(beginDate);
         } catch (NullPointerException e) {
-            System.out.println("kek1");
             JOptionPane.showMessageDialog(this, "Неверная дата начала!");
-            createMainMenu();
             return;
         }
         try {
             mission.setEndDate(endDate);
         } catch (NullPointerException e) {
-            System.out.println("kek2");
+            JOptionPane.showMessageDialog(this, "Неверная дата конца!");
+            return;
         }
         mission.setAuthor(currentUser.getServiceNumber());
 
         try {
-            if (currentUser.getPositionId() != 2) {
-                int id = ((JComboBox) jTextFieldList.get(4)).getSelectedIndex();
+            if (currentUser.getPositionId() != PositionInDB.RYADOVOI.getId()) {
+                int id = ((JComboBox) panelFields.get(4)).getSelectedIndex();
                 if (id != -1) {
                     mission.setExecutor(employeeArr[id]);
                 }
@@ -607,7 +606,7 @@ public class MainFrame extends JFrame {
         }
 
         try {
-            String priorityString = ((JComboBox) jTextFieldList.get(5)).getSelectedItem().toString();
+            String priorityString = ((JComboBox) panelFields.get(5)).getSelectedItem().toString();
             if (priorityString.equals("Низкий")) {
                 mission.setPriorityId('3');
             } else if (priorityString.equals("Средний")) {
@@ -619,7 +618,7 @@ public class MainFrame extends JFrame {
         }
 
         try {
-            int id = ((JComboBox) jTextFieldList.get(6)).getSelectedIndex();
+            int id = ((JComboBox) panelFields.get(6)).getSelectedIndex();
             if (id != -1) {
                 mission.setCustomerId(customerArr[id]);
             }
@@ -627,15 +626,11 @@ public class MainFrame extends JFrame {
         }
         try {
             missionService.save(mission);
+            JOptionPane.showMessageDialog(this, "Успешно!");
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Что то не так!");
-            createMainMenu();
-            success = false;
         }
-        if (success) {
-            JOptionPane.showMessageDialog(this, "Успешно!");
             createMainMenu();
-        }
     }
 
     private void showPrioritiesTable() {
@@ -647,31 +642,39 @@ public class MainFrame extends JFrame {
         prioritiesFrame.add(prioritiesPanel);
         prioritiesFrame.setContentPane(prioritiesPanel);
         prioritiesFrame.setVisible(true);
-        List<Priority> list = priorityService.selectAllPriorities();
-        Object[][] array = new String[list.size()][2];
+        List<Priority> allPriorities = priorityService.selectAllPriorities();
+        Object[][] arrayForTable = new String[allPriorities.size()][2];
         Object[] columnsHeader = new String[]{"PriorityId", "Name"};
-        JTable table = new JTable(array, columnsHeader);
+        JTable table = new JTable(arrayForTable, columnsHeader);
         table.setEnabled(false);
-        for (int i = 0; i < list.size(); i++) {
-            Priority tmp = list.get(i);
-            array[i][0] = tmp.getPriorityId().toString();
-            array[i][1] = tmp.getName();
+        for (int i = 0; i < allPriorities.size(); i++) {
+            Priority tmp = allPriorities.get(i);
+            arrayForTable[i][0] = tmp.getPriorityId().toString();
+            arrayForTable[i][1] = tmp.getName();
         }
-        setTableColumnProperties(prioritiesFrame, prioritiesPanel, table);
+        setTableColumnPropertiesForTwoColumn(table);
+        setContentsBox(prioritiesPanel, table, 580);
+        setActiveFrames(prioritiesFrame);
     }
 
-    private void setTableColumnProperties(JFrame prioritiesFrame, Panel prioritiesPanel, JTable table) {
+    private void setActiveFrames(JFrame frame) {
+        activeFrames.forEach(e -> e.setVisible(false));
+        activeFrames.add(frame);
+    }
+
+    private void setContentsBox(Panel panel, JTable table, int width) {
+        Box contents = new Box(BoxLayout.Y_AXIS);
+        contents.setPreferredSize(new Dimension(width, 480));
+        contents.add(new JScrollPane(table));
+        panel.add(contents);
+    }
+
+    private void setTableColumnPropertiesForTwoColumn(JTable table) {
         TableColumnModel columnModel = table.getColumnModel();
         columnModel.getColumn(0).setCellRenderer(new WordWrapCellRenderer());
         columnModel.getColumn(1).setCellRenderer(new WordWrapCellRenderer());
         columnModel.getColumn(0).setPreferredWidth(100);
         columnModel.getColumn(1).setPreferredWidth(160);
-        Box contents = new Box(BoxLayout.Y_AXIS);
-        contents.setPreferredSize(new Dimension(580, 480));
-        contents.add(new JScrollPane(table));
-        prioritiesPanel.add(contents);
-        activeFrames.forEach(e -> e.setVisible(false));
-        activeFrames.add(prioritiesFrame);
     }
 
     private void showPositionsTable() {
@@ -683,17 +686,19 @@ public class MainFrame extends JFrame {
         positionsFrame.add(positionsPanel);
         positionsFrame.setContentPane(positionsPanel);
         positionsFrame.setVisible(true);
-        List<Position> list = positionService.selectAllPositions();
-        Object[][] array = new String[list.size()][2];
+        List<Position> allPositions = positionService.selectAllPositions();
+        Object[][] arrayTable = new String[allPositions.size()][2];
         Object[] columnsHeader = new String[]{"PositionId", "Tittle"};
-        JTable table = new JTable(array, columnsHeader);
+        JTable table = new JTable(arrayTable, columnsHeader);
         table.setEnabled(false);
-        for (int i = 0; i < list.size(); i++) {
-            Position tmp = list.get(i);
-            array[i][0] = tmp.getPositionId().toString();
-            array[i][1] = tmp.getTitle();
+        for (int i = 0; i < allPositions.size(); i++) {
+            Position tmp = allPositions.get(i);
+            arrayTable[i][0] = tmp.getPositionId().toString();
+            arrayTable[i][1] = tmp.getTitle();
         }
-        setTableColumnProperties(positionsFrame, positionsPanel, table);
+        setTableColumnPropertiesForTwoColumn(table);
+        setContentsBox(positionsPanel, table, 580);
+        setActiveFrames(positionsFrame);
     }
 
     private void showMissionsTable() {
@@ -708,148 +713,142 @@ public class MainFrame extends JFrame {
         List<Mission> missionToSee = new LinkedList<>();
         List<Mission> missionToChange = new LinkedList<>();
         allMissions.sort(Comparator.comparing(Mission::getMissionId));
-        Object[][] array = new String[allMissions.size()][10];
+        Object[][] startArrayForTable = new String[allMissions.size()][10];
         Object[] columnsHeader = new String[]{"MissionId", "Name",
                 "Description", "BeginDate", "EndDate", "Complete", "Author", "Executor",
                 "PriorityId", "CustomerId"};
-        List<String[]> list1 = new ArrayList<>();
+        List<String[]> listForEndArrayForTable = new ArrayList<>();
 
-        List<Boolean[]> listBool = new ArrayList<>();
-        Boolean[][] isEdit = new Boolean[allMissions.size()][10];
+        List<Boolean[]> listEnabledButton = new ArrayList<>();
+        Boolean[][] tmpArrIsEditButton = new Boolean[allMissions.size()][10];
 
         for (int i = 0; i < allMissions.size(); i++) {
-            Mission tmp = allMissions.get(i);
+            Mission mission = allMissions.get(i);
             if (currentUser.getPositionId() == 1) {
-                Employee employee2 = employeeService.selectEmployeeByServiceNumber(tmp.getAuthor());
-                if (!tmp.getAuthor().equals(currentUser.getServiceNumber())
-                        && !Objects.equals(tmp.getExecutor(), currentUser.getServiceNumber())
+                Employee employee2 = employeeService.selectEmployeeByServiceNumber(mission.getAuthor());
+                if (!mission.getAuthor().equals(currentUser.getServiceNumber())
+                        && !Objects.equals(mission.getExecutor(), currentUser.getServiceNumber())
                         && employee2.getPositionId() != 2) {
                     continue;
                 }
             }
             if (currentUser.getPositionId() == 2) {
-                if (!tmp.getAuthor().equals(currentUser.getServiceNumber())
-                        && !Objects.equals(tmp.getExecutor(), currentUser.getServiceNumber())) {
+                if (!mission.getAuthor().equals(currentUser.getServiceNumber())
+                        && !Objects.equals(mission.getExecutor(), currentUser.getServiceNumber())) {
                     continue;
                 }
             }
-            missionToSee.add(tmp);
+            missionToSee.add(mission);
             if (currentUser.getPositionId() == 3) {
                 //all true
                 for (int j = 0; j < 10; j++) {
-                    isEdit[i][j] = true;
+                    tmpArrIsEditButton[i][j] = true;
                 }
-            } else if (Objects.isNull(tmp.getComplete())) {
-                if (currentUser.getServiceNumber().equals(tmp.getAuthor()) && currentUser.getPositionId() == 1) {
+            } else if (Objects.isNull(mission.getComplete())) {
+                if (currentUser.getServiceNumber().equals(mission.getAuthor()) && currentUser.getPositionId() == 1) {
                     //all except author
                     for (int j = 0; j < 10; j++) {
-                        isEdit[i][j] = j != 6;
+                        tmpArrIsEditButton[i][j] = j != 6;
                     }
-                } else if (currentUser.getServiceNumber().equals(tmp.getAuthor()) && currentUser.getPositionId() == 2) {
+                } else if (currentUser.getServiceNumber().equals(mission.getAuthor()) && currentUser.getPositionId() == 2) {
                     //all except author and executor
                     for (int j = 0; j < 10; j++) {
-                        isEdit[i][j] = j != 6 && j != 7;
+                        tmpArrIsEditButton[i][j] = j != 6 && j != 7;
                     }
                 } else {
                     // only dateEnd and Complete
                     for (int j = 0; j < 10; j++) {
-                        isEdit[i][j] = j == 4 || j == 5;
+                        tmpArrIsEditButton[i][j] = j == 4 || j == 5;
                     }
                 }
             } else {
                 // all false
                 for (int j = 0; j < 10; j++) {
-                    isEdit[i][j] = false;
+                    tmpArrIsEditButton[i][j] = false;
                 }
             }
-            listBool.add(isEdit[i]);
-            array[i][0] = tmp.getMissionId().toString();
-            array[i][1] = tmp.getName();
-            array[i][2] = tmp.getDescription();
-            SimpleDateFormat formatter1 = new SimpleDateFormat("yyyy-MM-dd");
-            array[i][3] = formatter1.format(tmp.getBeginDate());
+            listEnabledButton.add(tmpArrIsEditButton[i]);
+            startArrayForTable[i][0] = mission.getMissionId().toString();
+            startArrayForTable[i][1] = mission.getName();
+            startArrayForTable[i][2] = mission.getDescription();
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+            startArrayForTable[i][3] = dateFormat.format(mission.getBeginDate());
             try {
-                SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
-                array[i][4] = formatter.format(tmp.getEndDate());
+                startArrayForTable[i][4] = dateFormat.format(mission.getEndDate());
             } catch (NullPointerException ignored) {
             }
             try {
-                SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                array[i][5] = formatter.format(tmp.getComplete());
+                SimpleDateFormat timeStompFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                startArrayForTable[i][5] = timeStompFormatter.format(mission.getComplete());
             } catch (NullPointerException ignored) {
             }
             try {
-                array[i][6] = tmp.getAuthor().toString();
+                startArrayForTable[i][6] = mission.getAuthor().toString();
             } catch (NullPointerException ignored) {
             }
             try {
-                array[i][7] = tmp.getExecutor().toString();
+                startArrayForTable[i][7] = mission.getExecutor().toString();
             } catch (NullPointerException ignored) {
             }
             try {
-                array[i][8] = tmp.getPriorityId().toString();
+                startArrayForTable[i][8] = mission.getPriorityId().toString();
             } catch (NullPointerException ignored) {
             }
             try {
-                array[i][9] = tmp.getCustomerId().toString();
+                startArrayForTable[i][9] = mission.getCustomerId().toString();
             } catch (NullPointerException ignored) {
             }
-            list1.add((String[]) array[i]);
+            listForEndArrayForTable.add((String[]) startArrayForTable[i]);
         }
-        Object[][] array2 = new String[list1.size()][10];
-        for (int i = 0; i < list1.size(); i++) {
-            array2[i] = list1.get(i);
+        Object[][] endArrayForTable = new String[listForEndArrayForTable.size()][10];
+        for (int i = 0; i < listForEndArrayForTable.size(); i++) {
+            endArrayForTable[i] = listForEndArrayForTable.get(i);
         }
 
-        Boolean[][] arrayBool2 = new Boolean[listBool.size()][10];
-        for (int i = 0; i < listBool.size(); i++) {
-            arrayBool2[i] = listBool.get(i);
+        Boolean[][] arrayIsEditButton = new Boolean[listEnabledButton.size()][10];
+        for (int i = 0; i < listEnabledButton.size(); i++) {
+            arrayIsEditButton[i] = listEnabledButton.get(i);
         }
-        MyTable table = new MyTable(array2, columnsHeader);
-        table.setIsEdit(arrayBool2);
-        JButton findButt = new JButton("Принять изменения");
-        findButt.setVisible(false);
+        MyTable table = new MyTable(endArrayForTable, columnsHeader);
+        table.setIsEdit(arrayIsEditButton);
+        JButton acceptButt = new JButton("Принять изменения");
+        acceptButt.setVisible(false);
         table.getModel().addTableModelListener(e -> {
-            findButt.setVisible(true);
-            Mission tmp = missionToSee.get(e.getFirstRow());
+            acceptButt.setVisible(true);
+            Mission tmpMission = missionToSee.get(e.getFirstRow());
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
             int column = e.getColumn();
             if (column == 0) {
-                tmp.setMissionId(Integer.parseInt(table.getModel().getValueAt(e.getFirstRow(), e.getColumn()).toString()));
+                tmpMission.setMissionId(Integer.parseInt(table.getModel().getValueAt(e.getFirstRow(), e.getColumn()).toString()));
             } else if (column == 1) {
-                tmp.setName(table.getModel().getValueAt(e.getFirstRow(), e.getColumn()).toString());
+                tmpMission.setName(table.getModel().getValueAt(e.getFirstRow(), e.getColumn()).toString());
             } else if (column == 2) {
-                tmp.setDescription(table.getModel().getValueAt(e.getFirstRow(), e.getColumn()).toString());
+                tmpMission.setDescription(table.getModel().getValueAt(e.getFirstRow(), e.getColumn()).toString());
             } else if (column == 3) {
-                SimpleDateFormat formatter1 = new SimpleDateFormat("yyyy-MM-dd");
                 try {
-                    tmp.setBeginDate(formatter1.parse(table.getModel().getValueAt(e.getFirstRow(), e.getColumn()).toString()));
-                } catch (ParseException parseException) {
-                    parseException.printStackTrace();
+                    tmpMission.setBeginDate(dateFormat.parse(table.getModel().getValueAt(e.getFirstRow(), e.getColumn()).toString()));
+                } catch (ParseException ignored) {
                 }
             } else if (column == 4) {
-                SimpleDateFormat formatter1 = new SimpleDateFormat("yyyy-MM-dd");
                 try {
-                    tmp.setEndDate(formatter1.parse(table.getModel().getValueAt(e.getFirstRow(), e.getColumn()).toString()));
-                } catch (ParseException parseException) {
-                    parseException.printStackTrace();
+                    tmpMission.setEndDate(dateFormat.parse(table.getModel().getValueAt(e.getFirstRow(), e.getColumn()).toString()));
+                } catch (ParseException ignored) {
                 }
             } else if (column == 5) {
-                SimpleDateFormat formatter1 = new SimpleDateFormat("yyyy-MM-dd");
                 try {
-                    tmp.setComplete(formatter1.parse(table.getModel().getValueAt(e.getFirstRow(), e.getColumn()).toString()));
-                } catch (ParseException parseException) {
-                    parseException.printStackTrace();
+                    tmpMission.setComplete(dateFormat.parse(table.getModel().getValueAt(e.getFirstRow(), e.getColumn()).toString()));
+                } catch (ParseException ignored) {
                 }
             } else if (column == 6) {
-                tmp.setAuthor(Integer.parseInt(table.getModel().getValueAt(e.getFirstRow(), e.getColumn()).toString()));
+                tmpMission.setAuthor(Integer.parseInt(table.getModel().getValueAt(e.getFirstRow(), e.getColumn()).toString()));
             } else if (column == 7) {
-                tmp.setExecutor(Integer.parseInt(table.getModel().getValueAt(e.getFirstRow(), e.getColumn()).toString()));
+                tmpMission.setExecutor(Integer.parseInt(table.getModel().getValueAt(e.getFirstRow(), e.getColumn()).toString()));
             } else if (column == 8) {
-                tmp.setPriorityId(table.getModel().getValueAt(e.getFirstRow(), e.getColumn()).toString().charAt(0));
+                tmpMission.setPriorityId(table.getModel().getValueAt(e.getFirstRow(), e.getColumn()).toString().charAt(0));
             } else if (column == 9) {
-                tmp.setCustomerId(Integer.parseInt(table.getModel().getValueAt(e.getFirstRow(), e.getColumn()).toString()));
+                tmpMission.setCustomerId(Integer.parseInt(table.getModel().getValueAt(e.getFirstRow(), e.getColumn()).toString()));
             }
-            missionToChange.add(tmp);
+            missionToChange.add(tmpMission);
         });
         TableColumnModel columnModel = table.getColumnModel();
         columnModel.getColumn(0).setCellRenderer(new WordWrapCellRenderer());
@@ -873,38 +872,29 @@ public class MainFrame extends JFrame {
         columnModel.getColumn(8).setPreferredWidth(100);
         columnModel.getColumn(9).setPreferredWidth(100);
 
-        findButt.setBounds(150, 30, 80, 30);
-        findButt.setForeground(Color.BLACK);
-        findButt.setBackground(AQUA);
-        findButt.setFocusable(false);
-        findButt.addActionListener(e -> updateMissions(missionToChange, findButt));
-        missionsPanel.add(findButt);
+        acceptButt.setBounds(150, 30, 80, 30);
+        acceptButt.setForeground(Color.BLACK);
+        acceptButt.setBackground(AQUA);
+        acceptButt.setFocusable(false);
+        acceptButt.addActionListener(e -> updateMissions(missionToChange, acceptButt));
+        missionsPanel.add(acceptButt);
 
-        setBoxContents(missionsFrame, missionsPanel, table);
+        setContentsBox(missionsPanel, table, 1180);
+        missionsFrame.add(missionsPanel);
+        missionsFrame.setContentPane(missionsPanel);
+        setActiveFrames(missionsFrame);
     }
 
-    private void updateMissions(List<Mission> missionToChange, JButton findButt) {
-        findButt.setVisible(false);
+    private void updateMissions(List<Mission> missionToChange, JButton acceptButt) {
+        acceptButt.setVisible(false);
         for (Mission mission : missionToChange) {
-            System.out.println(mission);
             try {
                 missionService.update(mission);
                 missionToChange.remove(mission);
             } catch (Exception e) {
-                e.printStackTrace();
+                JOptionPane.showMessageDialog(this, "Что то не так с заданием " + mission);
             }
         }
-    }
-
-    private void setBoxContents(JFrame missionsFrame, Panel missionsPanel, JTable table) {
-        Box contents = new Box(BoxLayout.Y_AXIS);
-        contents.setPreferredSize(new Dimension(1180, 480));
-        contents.add(new JScrollPane(table));
-        missionsFrame.add(missionsPanel);
-        missionsFrame.setContentPane(missionsPanel);
-        missionsPanel.add(contents);
-        activeFrames.forEach(e -> e.setVisible(false));
-        activeFrames.add(missionsFrame);
     }
 
     private void showEquipmentsTable() {
@@ -916,20 +906,20 @@ public class MainFrame extends JFrame {
         equipmentsFrame.add(equipmentsPanel);
         equipmentsFrame.setContentPane(equipmentsPanel);
         equipmentsFrame.setVisible(true);
-        List<Equipment> list = equipmentService.selectAllEquipments();
-        Object[][] array = new String[list.size()][5];
+        List<Equipment> allEquipments = equipmentService.selectAllEquipments();
+        Object[][] arrayForTable = new String[allEquipments.size()][5];
         Object[] columnsHeader = new String[]{"SerNumber", "Type",
                 "Name", "Options", "Number"};
-        JTable table = new JTable(array, columnsHeader);
+        JTable table = new JTable(arrayForTable, columnsHeader);
         table.setEnabled(false);
-        for (int i = 0; i < list.size(); i++) {
-            Equipment tmp = list.get(i);
-            array[i][0] = tmp.getSerNumber();
-            array[i][1] = tmp.getType();
-            array[i][2] = tmp.getName();
-            array[i][3] = tmp.getOptions();
+        for (int i = 0; i < allEquipments.size(); i++) {
+            Equipment tmp = allEquipments.get(i);
+            arrayForTable[i][0] = tmp.getSerNumber();
+            arrayForTable[i][1] = tmp.getType();
+            arrayForTable[i][2] = tmp.getName();
+            arrayForTable[i][3] = tmp.getOptions();
             try {
-                array[i][4] = tmp.getNumber().toString();
+                arrayForTable[i][4] = tmp.getNumber().toString();
             } catch (NullPointerException ignored) {
             }
         }
@@ -948,8 +938,7 @@ public class MainFrame extends JFrame {
         contents.setPreferredSize(new Dimension(780, 480));
         contents.add(new JScrollPane(table));
         equipmentsPanel.add(contents);
-        activeFrames.forEach(e -> e.setVisible(false));
-        activeFrames.add(equipmentsFrame);
+        setActiveFrames(equipmentsFrame);
     }
 
     private void showEmployeesTable() {
@@ -959,54 +948,54 @@ public class MainFrame extends JFrame {
         employeesFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         Panel employeesPanel = new Panel();
         employeesFrame.setVisible(true);
-        List<Employee> list = employeeService.selectAllEmployees();
+        List<Employee> allEmployees = employeeService.selectAllEmployees();
 
         List<Employee> employeeToChange = new LinkedList<>();
-        Object[][] array;
+        Object[][] arrayForTable;
         Object[] columnsHeader;
         if (currentUser.getPositionId() != 3) {
-            array = new String[list.size()][9];
+            arrayForTable = new String[allEmployees.size()][9];
             columnsHeader = new String[]{"ServiceNumber", "FirstName",
                     "LastName", "MiddleName", "Phone", "Email", "FAX", "Login",
                     "PositionId"};
         } else {
-            array = new String[list.size()][10];
+            arrayForTable = new String[allEmployees.size()][10];
             columnsHeader = new String[]{"ServiceNumber", "FirstName",
                     "LastName", "MiddleName", "Phone", "Email", "FAX", "Login",
                     "Password", "PositionId"};
         }
-        JTable table = new JTable(array, columnsHeader);
+        JTable table = new JTable(arrayForTable, columnsHeader);
         if (currentUser.getPositionId() != 3) {
             table.setEnabled(false);
         }
-        for (int i = 0; i < list.size(); i++) {
-            Employee tmp = list.get(i);
-            array[i][0] = tmp.getServiceNumber().toString();
-            array[i][1] = tmp.getFirstName();
-            array[i][2] = tmp.getLastName();
-            array[i][3] = tmp.getMiddleName();
-            array[i][4] = tmp.getPhone();
-            array[i][5] = tmp.getEmail();
-            array[i][6] = tmp.getFax();
-            array[i][7] = tmp.getLogin();
+        for (int i = 0; i < allEmployees.size(); i++) {
+            Employee tmp = allEmployees.get(i);
+            arrayForTable[i][0] = tmp.getServiceNumber().toString();
+            arrayForTable[i][1] = tmp.getFirstName();
+            arrayForTable[i][2] = tmp.getLastName();
+            arrayForTable[i][3] = tmp.getMiddleName();
+            arrayForTable[i][4] = tmp.getPhone();
+            arrayForTable[i][5] = tmp.getEmail();
+            arrayForTable[i][6] = tmp.getFax();
+            arrayForTable[i][7] = tmp.getLogin();
             if (currentUser.getPositionId() == 3) {
-                array[i][8] = tmp.getPassword();
+                arrayForTable[i][8] = tmp.getPassword();
                 try {
-                    array[i][9] = tmp.getPositionId().toString();
+                    arrayForTable[i][9] = tmp.getPositionId().toString();
                 } catch (NullPointerException ignored) {
                 }
             } else {
                 try {
-                    array[i][8] = tmp.getPositionId().toString();
+                    arrayForTable[i][8] = tmp.getPositionId().toString();
                 } catch (NullPointerException ignored) {
                 }
             }
         }
-        JButton findButt = new JButton("Принять изменения");
-        findButt.setVisible(false);
+        JButton acceptButton = new JButton("Принять изменения");
+        acceptButton.setVisible(false);
         table.getModel().addTableModelListener(e -> {
-            findButt.setVisible(true);
-            Employee tmp = list.get(e.getFirstRow());
+            acceptButton.setVisible(true);
+            Employee tmp = allEmployees.get(e.getFirstRow());
             int column = e.getColumn();
             if (column == 0) {
                 tmp.setServiceNumber(Integer.parseInt(table.getModel().getValueAt(e.getFirstRow(), e.getColumn()).toString()));
@@ -1042,7 +1031,7 @@ public class MainFrame extends JFrame {
         columnModel.getColumn(6).setCellRenderer(new WordWrapCellRenderer());
         columnModel.getColumn(7).setCellRenderer(new WordWrapCellRenderer());
         columnModel.getColumn(8).setCellRenderer(new WordWrapCellRenderer());
-        if (currentUser.getPositionId() == 3) {
+        if (currentUser.getPositionId() == PositionInDB.ADMIN.getId()) {
             columnModel.getColumn(9).setCellRenderer(new WordWrapCellRenderer());
         }
         columnModel.getColumn(0).setPreferredWidth(130);
@@ -1054,28 +1043,30 @@ public class MainFrame extends JFrame {
         columnModel.getColumn(6).setPreferredWidth(100);
         columnModel.getColumn(7).setPreferredWidth(180);
         columnModel.getColumn(8).setPreferredWidth(300);
-        if (currentUser.getPositionId() == 3) {
+        if (currentUser.getPositionId() == PositionInDB.ADMIN.getId()) {
             columnModel.getColumn(9).setPreferredWidth(120);
         }
-        findButt.setBounds(150, 30, 80, 30);
-        findButt.setForeground(Color.BLACK);
-        findButt.setBackground(AQUA);
-        findButt.setFocusable(false);
-        findButt.addActionListener(e -> updateEmployers(employeeToChange, findButt));
-        employeesPanel.add(findButt);
+        acceptButton.setBounds(150, 30, 80, 30);
+        acceptButton.setForeground(Color.BLACK);
+        acceptButton.setBackground(AQUA);
+        acceptButton.setFocusable(false);
+        acceptButton.addActionListener(e -> updateEmployers(employeeToChange, acceptButton));
+        employeesPanel.add(acceptButton);
 
-        setBoxContents(employeesFrame, employeesPanel, table);
+        setContentsBox(employeesPanel, table, 1180);
+        employeesFrame.add(employeesPanel);
+        employeesFrame.setContentPane(employeesPanel);
+        setActiveFrames(employeesFrame);
     }
 
-    private void updateEmployers(List<Employee> employeeToChange, JButton findButt) {
-        findButt.setVisible(false);
+    private void updateEmployers(List<Employee> employeeToChange, JButton acceptButton) {
+        acceptButton.setVisible(false);
         for (Employee employee : employeeToChange) {
-            System.out.println(employee);
             try {
                 employeeService.update(employee);
                 employeeToChange.remove(employee);
             } catch (Exception e) {
-                e.printStackTrace();
+                JOptionPane.showMessageDialog(this, "Что то не так с пользователем " + employee);
             }
         }
     }
@@ -1106,21 +1097,21 @@ public class MainFrame extends JFrame {
         findNotButt.setFocusable(false);
         findNotButt.setVisible(false);
 
-        List<Customer> list = customerService.selectAllCustomers();
-        Object[][] array = new String[list.size()][7];
+        List<Customer> allCustomers = customerService.selectAllCustomers();
+        Object[][] arrayForTable = new String[allCustomers.size()][7];
         Object[] columnsHeader = new String[]{"CustomerId", "FirstName",
                 "LastName", "MiddleName", "Phone", "Email", "INN"};
-        JTable table = new JTable(array, columnsHeader);
+        JTable table = new JTable(arrayForTable, columnsHeader);
         table.setEnabled(false);
-        for (int i = 0; i < list.size(); i++) {
-            Customer tmp = list.get(i);
-            array[i][0] = tmp.getCustomerId().toString();
-            array[i][1] = tmp.getFirstName();
-            array[i][2] = tmp.getLastName();
-            array[i][3] = tmp.getMiddleName();
-            array[i][4] = tmp.getPhone();
-            array[i][5] = tmp.getEmail();
-            array[i][6] = tmp.getInn();
+        for (int i = 0; i < allCustomers.size(); i++) {
+            Customer tmp = allCustomers.get(i);
+            arrayForTable[i][0] = tmp.getCustomerId().toString();
+            arrayForTable[i][1] = tmp.getFirstName();
+            arrayForTable[i][2] = tmp.getLastName();
+            arrayForTable[i][3] = tmp.getMiddleName();
+            arrayForTable[i][4] = tmp.getPhone();
+            arrayForTable[i][5] = tmp.getEmail();
+            arrayForTable[i][6] = tmp.getInn();
         }
         TableColumnModel columnModel = table.getColumnModel();
         columnModel.getColumn(0).setCellRenderer(new WordWrapCellRenderer());
@@ -1141,33 +1132,32 @@ public class MainFrame extends JFrame {
         contents.setPreferredSize(new Dimension(800, 480));
         contents.add(new JScrollPane(table));
         findButt.addActionListener(e -> {
-            findCustomer(findField, array);
+            findCustomer(findField, arrayForTable);
             if (!findField.getText().equals("")) {
                 findNotButt.setVisible(true);
             }
         });
         customerPanel.add(findButt);
         findNotButt.addActionListener(e -> {
-            findCustomer(new JTextField(""), array);
+            findCustomer(new JTextField(""), arrayForTable);
             findField.setText("");
             findNotButt.setVisible(false);
         });
         customerPanel.add(findNotButt, 2);
         customerPanel.add(contents, 3);
-        activeFrames.forEach(e -> e.setVisible(false));
-        activeFrames.add(customerFrame);
+        setActiveFrames(customerFrame);
     }
 
-    private void findCustomer(JTextField field, Object[][] array) {
-        List<String[]> list = new LinkedList<>();
-        for (Object[] objects : array) {
+    private void findCustomer(JTextField field, Object[][] arrayForTable) {
+        List<String[]> foundStrings = new LinkedList<>();
+        for (Object[] objects : arrayForTable) {
             if (Arrays.toString(objects).toLowerCase().contains(field.getText().toLowerCase())) {
-                list.add((String[]) objects);
+                foundStrings.add((String[]) objects);
             }
         }
-        Object[][] array2 = new String[list.size()][7];
-        for (int i = 0; i < list.size(); i++) {
-            array2[i] = list.get(i);
+        Object[][] arrayFoundStrings = new String[foundStrings.size()][7];
+        for (int i = 0; i < foundStrings.size(); i++) {
+            arrayFoundStrings[i] = foundStrings.get(i);
         }
         JFrame frame = null;
         for (JFrame activeFrame : activeFrames) {
@@ -1179,7 +1169,7 @@ public class MainFrame extends JFrame {
 
         Object[] columnsHeader = new String[]{"CustomerId", "FirstName",
                 "LastName", "MiddleName", "Phone", "Email", "INN"};
-        JTable table = new JTable(array2, columnsHeader);
+        JTable table = new JTable(arrayFoundStrings, columnsHeader);
         TableColumnModel columnModel = table.getColumnModel();
         columnModel.getColumn(0).setCellRenderer(new WordWrapCellRenderer());
         columnModel.getColumn(1).setCellRenderer(new WordWrapCellRenderer());
@@ -1236,12 +1226,8 @@ public class MainFrame extends JFrame {
         columnModel.getColumn(1).setPreferredWidth(160);
         columnModel.getColumn(2).setPreferredWidth(400);
         columnModel.getColumn(3).setPreferredWidth(100);
-        Box contents = new Box(BoxLayout.Y_AXIS);
-        contents.setPreferredSize(new Dimension(780, 480));
-        contents.add(new JScrollPane(table));
-        contractPanel.add(contents);
-        activeFrames.forEach(e -> e.setVisible(false));
-        activeFrames.add(contractFrame);
+        setContentsBox(contractPanel, table, 780);
+        setActiveFrames(contractFrame);
     }
 
     private void createFrameAndPanel() {
@@ -1254,7 +1240,7 @@ public class MainFrame extends JFrame {
         mainPanel.setLayout(null);
     }
 
-    class MyTable extends JTable {
+    static class MyTable extends JTable {
         Boolean[][] isEdit;
 
         public MyTable(Object[][] rowData, Object[] columnNames) {
