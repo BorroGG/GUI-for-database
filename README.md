@@ -1,3 +1,3 @@
 # GUI-for-database
-Десктопный интерфейс для базы данных Postgresql.
+Desktop interface for the database Postgresql.
 # Java SWING + SPRING + MYBATIS + POSTGRESQL
